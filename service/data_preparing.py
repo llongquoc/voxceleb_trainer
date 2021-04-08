@@ -1,6 +1,14 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
 
+
+import sys
+sys.path.insert(0,'..')
+
+from tuneThreshold import *
+from SpeakerNet import *
+from utils import *
+from DatasetLoader import get_data_loader
 import sys, time, os, argparse, socket
 import yaml
 import numpy
@@ -11,10 +19,6 @@ import zipfile
 import datetime
 import os
 import random
-from tuneThreshold import *
-from SpeakerNet import *
-from utils import *
-from DatasetLoader import get_data_loader
 import torch.distributed as dist
 import torch.multiprocessing as mp
 import numpy as np
@@ -33,8 +37,6 @@ parser = argparse.ArgumentParser(description = 'Prepare Data');
 ## Data loader
 parser.add_argument('--max_frames',     type=int,   default=200,    help='Input length to the network for training');
 parser.add_argument('--eval_frames',    type=int,   default=400,    help='Input length to the network for testing; 0 uses the whole files');
-parser.add_argument('--batch_size',     type=int,   default=64,    help='Batch size, number of speakers per batch');
-parser.add_argument('--max_seg_per_spk', type=int,  default=500,    help='Maximum number of utterances per speaker per epoch');
 parser.add_argument('--nDataLoaderThread', type=int, default=5,     help='Number of loader threads');
 
 ## Training details
@@ -58,7 +60,7 @@ parser.add_argument('--nPerSpeaker',    type=int,   default=2,      help='Number
 parser.add_argument('--nClasses',       type=int,   default=400,   help='Number of speakers in the softmax layer, only for softmax-based losses');
 
 ## Load
-parser.add_argument('--model_path',      type=str,   default='checkpoints', help='Path for model and logs');
+parser.add_argument('--model_path',      type=str,   default='model000000500.model', help='Path for model and logs');
 
 ## Model definition
 parser.add_argument('--n_mels',         type=int,   default=64,     help='Number of mel filterbanks');
@@ -73,7 +75,7 @@ parser.add_argument('--distributed',    dest='distributed', action='store_true',
 parser.add_argument('--mixedprec',      dest='mixedprec',   action='store_true', help='Enable mixed precision training')
 
 parser.add_argument('--dataset_path',     type=str,   default='dataset/train-set', help='Absolute path to the dataset');
-parser.add_argument('--feats_path',     type=str,   default='dataset/feats.npy', help='Path for feats file');
+parser.add_argument('--feats_path',     type=str,   default='feats.npy', help='Path for feats file');
 
 args = parser.parse_args();
 
@@ -102,24 +104,15 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         s = WrappedModel(s).cpu()
 
-    it = 1
-
     ## Initialise trainer and data loader
     trainer = ModelTrainer(s, **vars(args))
 
     ## Load model weights
-    modelfiles = glob.glob('%s/model0*.model'%args.model_save_path)
-    modelfiles.sort()
-
-    if len(modelfiles) >= 1:
-        trainer.loadParameters(modelfiles[-1]);
-        print('Model %s loaded from previous state!'%modelfiles[-1]);
-        it = int(os.path.splitext(os.path.basename(modelfiles[-1]))[0][5:]) + 1
-    else:
+    try:
+        trainer.loadParameters(args.model_path);
+    except:
         raise Exception('Model path is wrong!')
-
-    for ii in range(1,it):
-        trainer.__scheduler__.step()
+    print('Model %s loaded from previous state!'%args.model_path);
 
     files_path = []
     folder_list = os.listdir(dataset_path)
