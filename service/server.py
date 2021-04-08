@@ -82,8 +82,7 @@ args = parser.parse_args();
 
 
 args.model_save_path = args.model_path + '/model'
-n_gpus = torch.cuda.device_count()
-args.gpu = gpu
+args.gpu = torch.cuda.device_count()
 
 ## Load models
 s = SpeakerNet(**vars(args));
