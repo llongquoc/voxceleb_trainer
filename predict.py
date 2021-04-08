@@ -97,7 +97,7 @@ def create_feature_vectors(trainer, dataset_path, files_path):
         )
     
     for idx, data in enumerate(test_loader):
-            inp1                = data[0][0].cuda()
+            inp1                = data[0][0].cpu()
             ref_feat            = trainer.__model__(inp1).detach().cpu()
             feats[data[1][0]]   = ref_feat
             telapsed            = time.time() - tstart
@@ -130,7 +130,7 @@ def main_worker(gpu, ngpus_per_node, args):
         print('Loaded the model on GPU %d'%args.gpu)
 
     else:
-        s = WrappedModel(s).cuda(args.gpu)
+        s = WrappedModel(s).cpu()
 
     it = 1
 

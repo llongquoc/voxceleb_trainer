@@ -38,7 +38,7 @@ class SpeakerNet(nn.Module):
 
     def forward(self, data, label=None):
 
-        data    = data.reshape(-1,data.size()[-1]).cuda() 
+        data    = data.reshape(-1,data.size()[-1]).cpu()
         outp    = self.__S__.forward(data)
 
         if label == None:
@@ -231,7 +231,7 @@ class ModelTrainer(object):
     def loadParameters(self, path):
 
         self_state = self.__model__.module.state_dict();
-        loaded_state = torch.load(path, map_location="cuda:%d"%self.gpu);
+        loaded_state = torch.load(path, map_location="cpu");
         for name, param in loaded_state.items():
             origname = name;
             if name not in self_state:
@@ -246,4 +246,3 @@ class ModelTrainer(object):
                 continue;
 
             self_state[name].copy_(param);
-
