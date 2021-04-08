@@ -13,6 +13,7 @@ import os
 import random
 from tuneThreshold import *
 from SpeakerNet import *
+from utils import *
 from DatasetLoader import get_data_loader
 import torch.distributed as dist
 import torch.multiprocessing as mp
@@ -72,40 +73,9 @@ parser.add_argument('--distributed',    dest='distributed', action='store_true',
 parser.add_argument('--mixedprec',      dest='mixedprec',   action='store_true', help='Enable mixed precision training')
 
 parser.add_argument('--dataset_path',     type=str,   default='dataset/train-set', help='Absolute path to the dataset');
-parser.add_argument('--file_path',     type=str,   default='', help='Absolute path to the file need to predict');
 parser.add_argument('--feats_path',     type=str,   default='dataset/feats.npy', help='Path for feats file');
-parser.add_argument('--threshold',           type=float,   default=0,    help='Threshold');
-
-parser.add_argument('--prepare',           dest='prepare', action='store_true', help='Prepare data');
 
 args = parser.parse_args();
-
-
-def create_feature_vectors(trainer, dataset_path, files_path):
-    feats = {}
-    tstart = time.time()
-
-    trainer.__model__.eval();
-
-    test_dataset = test_dataset_loader(files_path, dataset_path, num_eval=10, eval_frames=args.eval_frames)
-    test_loader = torch.utils.data.DataLoader(
-            test_dataset,
-            batch_size=1,
-            shuffle=False,
-            num_workers=args.nDataLoaderThread,
-            drop_last=False,
-        )
-    
-    for idx, data in enumerate(test_loader):
-            inp1                = data[0][0].cpu()
-            ref_feat            = trainer.__model__(inp1).detach().cpu()
-            feats[data[1][0]]   = ref_feat
-            telapsed            = time.time() - tstart
-
-            if idx % 100 == 0:
-                sys.stdout.write('\rReading %d of %d: %.2f Hz, embedding size %d'%(idx,len(files_path),idx/telapsed,ref_feat.size()[1]));
-    
-    return feats
 
 
 def main_worker(gpu, ngpus_per_node, args):
@@ -151,40 +121,18 @@ def main_worker(gpu, ngpus_per_node, args):
     for ii in range(1,it):
         trainer.__scheduler__.step()
 
-    if args.prepare == True:
-        files_path = []
-        folder_list = os.listdir(dataset_path)
-        for folder in folder_list:
-            file_list = os.listdir(dataset_path + '/' + folder)
-            index = random.randint(0, len(file_list) - 1)
-            files_path.append(folder + '/' + file_list[index])
+    files_path = []
+    folder_list = os.listdir(dataset_path)
+    for folder in folder_list:
+        file_list = os.listdir(dataset_path + '/' + folder)
+        index = random.randint(0, len(file_list) - 1)
+        files_path.append(folder + '/' + file_list[index])
 
-        files_path.sort()
+    files_path.sort()
 
-        feats = create_feature_vectors(trainer, dataset_path, files_path)
+    feats = create_feature_vectors(trainer, dataset_path, files_path, args.nDataLoaderThread, args.eval_frames)
 
-        np.save(feats_path, feats)
-        return ''
-
-    file_path = args.file_path
-    if file_path == '':
-        raise Exception('File path is wrong!')
-    
-    feature_vector = create_feature_vectors(trainer, '', [file_path])[file_path]
-    normalized_vector = F.normalize(feature_vector, p=2, dim=1)
-    feats = np.load(feats_path, allow_pickle=True)[()]
-
-    max_score = args.threshold
-    speaker = ''
-    for key, value in feats.items():
-        com_feat = F.normalize(value, p=2, dim=1)
-        dist = F.pairwise_distance(normalized_vector.unsqueeze(-1), com_feat.unsqueeze(-1).transpose(0,2)).detach().cpu().numpy();
-        score = -1 * np.mean(dist);
-
-        if score >= max_score:
-            max_score = score
-            speaker = key.split('/')[0]
-    return speaker
+    np.save(feats_path, feats)
 
 
 if __name__ == '__main__':

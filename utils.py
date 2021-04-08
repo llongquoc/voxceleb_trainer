@@ -3,6 +3,23 @@
 
 import torch
 import torch.nn.functional as F
+import sys, time, os, argparse, socket
+import yaml
+import numpy
+import pdb
+import torch
+import glob
+import zipfile
+import datetime
+import os
+import random
+from tuneThreshold import *
+from SpeakerNet import *
+from DatasetLoader import get_data_loader
+import torch.distributed as dist
+import torch.multiprocessing as mp
+import numpy as np
+
 
 def accuracy(output, target, topk=(1,)):
     """Computes the precision@k for the specified values of k"""
@@ -18,6 +35,34 @@ def accuracy(output, target, topk=(1,)):
         correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
+
+
+def create_feature_vectors(trainer, dataset_path, files_path, nDataLoaderThread, eval_frames):
+    feats = {}
+    tstart = time.time()
+
+    trainer.__model__.eval();
+
+    test_dataset = test_dataset_loader(files_path, dataset_path, num_eval=10, eval_frames=eval_frames)
+    test_loader = torch.utils.data.DataLoader(
+            test_dataset,
+            batch_size=1,
+            shuffle=False,
+            num_workers=nDataLoaderThread,
+            drop_last=False,
+        )
+    
+    for idx, data in enumerate(test_loader):
+            inp1                = data[0][0].cpu()
+            ref_feat            = trainer.__model__(inp1).detach().cpu()
+            feats[data[1][0]]   = ref_feat
+            telapsed            = time.time() - tstart
+
+            if idx % 100 == 0:
+                sys.stdout.write('\rReading %d of %d: %.2f Hz, embedding size %d'%(idx,len(files_path),idx/telapsed,ref_feat.size()[1]));
+    
+    return feats
+
 
 class PreEmphasis(torch.nn.Module):
 
