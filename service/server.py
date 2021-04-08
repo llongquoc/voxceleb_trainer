@@ -142,16 +142,13 @@ def main_worker(file_path):
 @app.route('/predict', methods=['POST'])
 def predict():
     audio_file = request.files['file']
-	file_name = str(random.randint(0, 100000))
-	audio_file.save(file_name)
-
-	speaker = main_worker(file_name)
-
-	result = {'speaker': speaker}
-
+    file_name = str(random.randint(0, 100000))
+    audio_file.save(file_name)
+    speaker = main_worker(file_name)
     os.remove(file_name)
 
-	return jsonify(result)
+    result = {'speaker': speaker}
+    return jsonify(result)
 
 
 if __name__ == '__main__':
