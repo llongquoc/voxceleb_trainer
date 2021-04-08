@@ -116,7 +116,7 @@ def main_worker(file_path):
     if os.path.isfile(file_path):
         raise Exception('File path is wrong!')
     
-    feature_vector = create_feature_vectors(trainer, '', [file_path], args.nDataLoaderThread, args.eval_frames))[file_path]
+    feature_vector = create_feature_vectors(trainer, '', [file_path], args.nDataLoaderThread, args.eval_frames)[file_path]
     normalized_vector = F.normalize(feature_vector, p=2, dim=1)
     feats = np.load(args.feats_path, allow_pickle=True)[()]
 
