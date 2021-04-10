@@ -133,7 +133,6 @@ def predict():
     file_name = str(random.randint(0, 100000)) + '.wav'
     audio_file.save(file_name)
 
-    
     out = subprocess.call('ffmpeg -y -i %s -ac 1 -vn -acodec pcm_s16le -ar 16000 %s >/dev/null 2>/dev/null' %(file_name, file_name), shell=True)
     if out != 0:
         raise Exception('Invalid format!')
