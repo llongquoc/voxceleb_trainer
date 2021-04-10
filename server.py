@@ -16,6 +16,7 @@ import zipfile
 import datetime
 import os
 import random
+import subprocess
 import torch.distributed as dist
 import torch.multiprocessing as mp
 import numpy as np
@@ -129,8 +130,13 @@ def main_worker(file_path):
 @app.route('/predict', methods=['POST'])
 def predict():
     audio_file = request.files['file']
-    file_name = str(random.randint(0, 100000))
+    file_name = str(random.randint(0, 100000)) + '.wav'
     audio_file.save(file_name)
+
+    
+    out = subprocess.call('ffmpeg -y -i %s -ac 1 -vn -acodec pcm_s16le -ar 16000 %s >/dev/null 2>/dev/null' %(file_name, file_name), shell=True)
+    if out != 0:
+        raise Exception('Invalid format!')
     speaker = main_worker(file_name)
     os.remove(file_name)
 
@@ -139,4 +145,4 @@ def predict():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port='8008', debug=True)
+    app.run(host='0.0.0.0', port='8080', debug=False)
