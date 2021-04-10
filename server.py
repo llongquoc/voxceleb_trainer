@@ -21,6 +21,7 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 import numpy as np
 import torch.nn.functional as F
+from werkzeug.utils import secure_filename
 from flask import Flask, request, jsonify
 
 
@@ -130,14 +131,17 @@ def main_worker(file_path):
 @app.route('/predict', methods=['POST'])
 def predict():
     audio_file = request.files['file']
-    file_name = str(random.randint(0, 100000)) + '.wav'
-    audio_file.save(file_name)
+    file_name_1 = secure_filename(audio_file.filename)
+    audio_file.save(file_name_1)
 
-    out = subprocess.call('ffmpeg -y -i %s -ac 1 -vn -acodec pcm_s16le -ar 16000 %s >/dev/null 2>/dev/null' %(file_name, file_name), shell=True)
+    file_name_2 = str(random.randint(0, 100000)) + '.wav'
+    out = subprocess.call('ffmpeg -y -i %s -ac 1 -vn -acodec pcm_s16le -ar 16000 %s >/dev/null 2>/dev/null' %(file_name_1, file_name_2), shell=True)
     if out != 0:
-        raise Exception('Invalid format!')
-    speaker = main_worker(file_name)
-    os.remove(file_name)
+        return 'Invalid format!'
+
+    speaker = main_worker(file_name_2)
+    os.remove(file_name_1)
+    os.remove(file_name_2)
 
     result = {'speaker': speaker}
     return jsonify(result)
