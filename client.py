@@ -18,7 +18,10 @@ if __name__ == '__main__':
     
     with open(file_path, 'rb') as file:
         values = {'file': (file_path, file, 'audio/wav')}
-        response = requests.post(URL, files=values)
+        while True:
+            response = requests.post(URL, files=values)
+            if response.ok:
+                break
         data = response.json()
 
         print('Predicted result: {}'.format(data['speaker']))
