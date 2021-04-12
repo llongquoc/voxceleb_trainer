@@ -71,7 +71,7 @@ def main_worker(args):
     feats_path = args.feats_path
 
     ## Load models
-    s = SpeakerNet(**vars(args));
+    s = SpeakerNetCPU(**vars(args));
     s = WrappedModel(s).cpu()
 
     ## Load model weights

@@ -66,7 +66,7 @@ args = parser.parse_args();
 
 
 ## Load models
-s = SpeakerNet(**vars(args));
+s = SpeakerNetCPU(**vars(args));
 s = WrappedModel(s).cpu()
 
 ## Load model weights
