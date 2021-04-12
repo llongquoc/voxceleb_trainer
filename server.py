@@ -86,13 +86,12 @@ def main_worker(file_path):
     max_score = args.threshold
     speaker = ''
     for key, value in feats.items():
-        com_feat = F.normalize(value, p=2, dim=1)
-        dist = F.pairwise_distance(normalized_vector.unsqueeze(-1), com_feat.unsqueeze(-1).transpose(0,2)).detach().cpu().numpy();
+        dist = F.pairwise_distance(normalized_vector.unsqueeze(-1), value.unsqueeze(-1).transpose(0,2)).detach().cpu().numpy();
         score = -1 * np.mean(dist);
 
         if score >= max_score:
             max_score = score
-            speaker = key.split('/')[0]
+            speaker = key.split('/')[-2]
     return speaker
 
 
