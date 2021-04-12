@@ -2,12 +2,13 @@
 # -*- encoding: utf-8 -*-
 
 import torch
+import torch.distributed as dist
+import torch.multiprocessing as mp
 import torch.nn.functional as F
 import sys, time, os, argparse, socket
 import yaml
 import numpy
 import pdb
-import torch
 import glob
 import zipfile
 import datetime
@@ -15,6 +16,7 @@ import os
 import random
 from tuneThreshold import *
 from SpeakerNet import *
+from DatasetLoader import loadWAV
 from DatasetLoader import get_data_loader
 import torch.distributed as dist
 import torch.multiprocessing as mp
@@ -37,35 +39,11 @@ def accuracy(output, target, topk=(1,)):
     return res
 
 
-def create_feature_vectors(trainer, dataset_path, files_path, nDataLoaderThread, eval_frames):
-    feats = {}
-    tstart = time.time()
-
-    trainer.__model__.eval();
-
-    test_dataset = test_dataset_loader(files_path, dataset_path, num_eval=10, eval_frames=eval_frames)
-    test_loader = torch.utils.data.DataLoader(
-            test_dataset,
-            batch_size=1,
-            shuffle=False,
-            num_workers=nDataLoaderThread,
-            drop_last=False,
-        )
-    
-    for idx, data in enumerate(test_loader):
-            inp1                = data[0][0].cpu()
-            ref_feat            = trainer.__model__(inp1).detach().cpu()
-            feats[data[1][0]]   = ref_feat
-            telapsed            = time.time() - tstart
-
-            if idx % 100 == 0:
-                sys.stdout.write('\rReading %d of %d: %.2f Hz, embedding size %d'%(idx,len(files_path),idx/telapsed,ref_feat.size()[1]));
-    
-    return feats
+def create_data(file_path, eval_frames):
+    return torch.FloatTensor(loadWAV(file_path, eval_frames, evalmode=True))
 
 
 def loadParameters(path, model):
-
         self_state = model.module.state_dict();
         loaded_state = torch.load(path, map_location="cpu");
         for name, param in loaded_state.items():
@@ -82,6 +60,19 @@ def loadParameters(path, model):
                 continue;
 
             self_state[name].copy_(param);
+
+
+def create_feature_vectors(model, dataset_path, files_path, eval_frames):
+    feats = {}
+    
+    for file_path in files_path:
+        path = os.path.join(dataset_path, file_path)
+        data = create_data(path, eval_frames)
+        feature_vector = model(data).detach().cpu()
+        normalized_vector = F.normalize(feature_vector, p=2, dim=1)
+        feats[path] = normalized_vector
+
+    return feats
 
 
 class PreEmphasis(torch.nn.Module):

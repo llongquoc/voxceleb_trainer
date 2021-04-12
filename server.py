@@ -3,7 +3,7 @@
 
 
 from SpeakerNet import *
-from utils import loadParameters
+from utils import *
 from DatasetLoader import loadWAV
 import sys, time, os, argparse, socket
 import yaml
@@ -78,7 +78,7 @@ print('Model %s loaded from previous state!'%args.model_path);
 
 
 def main_worker(file_path):
-    data = torch.FloatTensor(loadWAV(file_path, args.eval_frames, evalmode=True))
+    data = create_data(file_path, args.eval_frames)
     feature_vector = s(data).detach().cpu()
     normalized_vector = F.normalize(feature_vector, p=2, dim=1)
     feats = np.load(args.feats_path, allow_pickle=True)[()]
