@@ -64,6 +64,26 @@ def create_feature_vectors(trainer, dataset_path, files_path, nDataLoaderThread,
     return feats
 
 
+def loadParameters(path, model):
+
+        self_state = model.module.state_dict();
+        loaded_state = torch.load(path, map_location="cpu");
+        for name, param in loaded_state.items():
+            origname = name;
+            if name not in self_state:
+                name = name.replace("module.", "");
+
+                if name not in self_state:
+                    print("%s is not in the model."%origname);
+                    continue;
+
+            if self_state[name].size() != loaded_state[origname].size():
+                print("Wrong parameter length: %s, model: %s, loaded: %s"%(origname, self_state[name].size(), loaded_state[origname].size()));
+                continue;
+
+            self_state[name].copy_(param);
+
+
 class PreEmphasis(torch.nn.Module):
 
     def __init__(self, coef: float = 0.97):

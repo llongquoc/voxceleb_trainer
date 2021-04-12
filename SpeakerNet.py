@@ -231,7 +231,7 @@ class ModelTrainer(object):
     def loadParameters(self, path):
 
         self_state = self.__model__.module.state_dict();
-        loaded_state = torch.load(path, map_location="cpu");
+        loaded_state = torch.load(path, map_location="cuda:%d"%self.gpu);
         for name, param in loaded_state.items():
             origname = name;
             if name not in self_state:
