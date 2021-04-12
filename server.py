@@ -76,12 +76,13 @@ except:
     raise Exception('Model path is wrong!')
 print('Model %s loaded from previous state!'%args.model_path);
 
+feats = np.load(args.feats_path, allow_pickle=True)[()]
+
 
 def main_worker(file_path):
     data = create_data(file_path, args.eval_frames)
     feature_vector = s(data).detach().cpu()
     normalized_vector = F.normalize(feature_vector, p=2, dim=1)
-    feats = np.load(args.feats_path, allow_pickle=True)[()]
 
     max_score = args.threshold
     speaker = ''
