@@ -2,7 +2,7 @@ import requests
 import argparse
 import sys
 
-URL = 'https://speaker-recognition-service-hahp6a25fq-uc.a.run.app/predict'
+URL = 'https://speaker-recognition-service-hahp6a25fq-as.a.run.app/predict'
 
 if __name__ == '__main__':
     try:

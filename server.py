@@ -101,7 +101,7 @@ app = Flask(__name__)
 @app.route('/predict', methods=['POST'])
 def predict():
     audio_file = request.files['file']
-    file_name_1 = str(random.randint(0, 100000)) + secure_filename(audio_file.filename).split('.')[-1]
+    file_name_1 = str(random.randint(0, 100000)) + '.' + secure_filename(audio_file.filename).split('.')[-1]
     audio_file.save(file_name_1)
 
     file_name_2 = str(random.randint(0, 100000)) + '.wav'
