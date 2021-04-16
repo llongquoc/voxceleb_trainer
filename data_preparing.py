@@ -59,7 +59,10 @@ parser.add_argument('--model',          type=str,   default='ResNetSE34V2',     
 parser.add_argument('--encoder_type',   type=str,   default='ASP',  help='Type of encoder');
 parser.add_argument('--nOut',           type=int,   default=512,    help='Embedding size in the last FC layer');
 
-## Data
+## Data_preparing 's params
+parser.add_argument('--preprocess',           dest='preprocess', action='store_true', help='Use when preprocess data');
+parser.add_argument('--gpu',           dest='gpu', action='store_true', help='Use GPU');
+parser.add_argument('--append',           dest='append', action='store_true', help='Append feats.npy');
 parser.add_argument('--dataset_path',     type=str,   default='dataset/train-set', help='Absolute path to the dataset');
 parser.add_argument('--feats_path',     type=str,   default='feats.npy', help='Path for feats file');
 
@@ -70,13 +73,31 @@ def main_worker(args):
     dataset_path = args.dataset_path
     feats_path = args.feats_path
 
+    if args.preprocess == True:
+        folder_list = os.listdir(dataset_path)
+        for folder in folder_list:
+            file_list = os.listdir(dataset_path + '/' + folder)
+            for file in file_list:
+                file_path = dataset_path + '/' + folder + '/' + file
+                outfile = dataset_path + '/' + folder + '/' + file.replace(file.split('.')[-1], 'wav')
+                out = subprocess.call('ffmpeg -y -i %s -ac 1 -vn -acodec pcm_s16le -ar 16000 %s >/dev/null 2>/dev/null' %(file_path, outfile), shell=True)
+                if out != 0:
+                    raise ValueError('Conversion failed %s.'%file_path)
+                os.remove(file_path)
+
+        quit()
+
     ## Load models
-    s = SpeakerNetCPU(**vars(args));
-    s = WrappedModel(s).cpu()
+    if args.gpu == True:
+        s = SpeakerNet(**vars(args));
+        s = WrappedModel(s).cuda(0)
+    else:
+        s = SpeakerNetCPU(**vars(args));
+        s = WrappedModel(s).cpu()
 
     ## Load model weights
     try:
-        loadParameters(args.model_path, s);
+        loadParameters(args.model_path, s, args.gpu);
     except:
         raise Exception('Model path is wrong!')
     print('Model %s loaded from previous state!'%args.model_path);
@@ -91,6 +112,11 @@ def main_worker(args):
     files_path.sort()
 
     feats = create_feature_vectors(s, dataset_path, files_path, args.eval_frames)
+    
+    if args.append == True:
+        temp = np.load(args.feats_path, allow_pickle=True)[()]
+        for key, value in temp.items():
+            feats[key] = value
 
     np.save(feats_path, feats)
 

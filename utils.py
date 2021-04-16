@@ -43,9 +43,12 @@ def create_data(file_path, eval_frames):
     return torch.FloatTensor(loadWAV(file_path, eval_frames, evalmode=True))
 
 
-def loadParameters(path, model):
+def loadParameters(path, model, gpu):
         self_state = model.module.state_dict();
-        loaded_state = torch.load(path, map_location="cpu");
+        if gpu == True:
+            loaded_state = torch.load(path, map_location="cuda:%d"%0);
+        else:
+            loaded_state = torch.load(path, map_location="cpu");
         for name, param in loaded_state.items():
             origname = name;
             if name not in self_state:

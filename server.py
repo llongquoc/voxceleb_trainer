@@ -59,6 +59,7 @@ parser.add_argument('--encoder_type',   type=str,   default='ASP',  help='Type o
 parser.add_argument('--nOut',           type=int,   default=512,    help='Embedding size in the last FC layer');
 
 ##Server 's params
+parser.add_argument('--gpu',           dest='gpu', action='store_true', help='Use GPU');
 parser.add_argument('--threshold',           type=float,   default=-1.0831763744354248,    help='Threshold');
 parser.add_argument('--feats_path',     type=str,   default='feats.npy', help='Path for feats file');
 
@@ -66,12 +67,16 @@ args = parser.parse_args();
 
 
 ## Load models
-s = SpeakerNetCPU(**vars(args));
-s = WrappedModel(s).cpu()
+if args.gpu == True:
+    s = SpeakerNet(**vars(args));
+    s = WrappedModel(s).cuda(0)
+else:
+    s = SpeakerNetCPU(**vars(args));
+    s = WrappedModel(s).cpu()
 
 ## Load model weights
 try:
-    loadParameters(args.model_path, s);
+    loadParameters(args.model_path, s, args.gpu);
 except:
     raise Exception('Model path is wrong!')
 print('Model %s loaded from previous state!'%args.model_path);

@@ -10,4 +10,4 @@ RUN apt install -y ffmpeg
 COPY ./ ./
 EXPOSE 8080
 
-CMD ["python" , "server.py"]
+CMD ["python" , "server.py", "--gpu"]
