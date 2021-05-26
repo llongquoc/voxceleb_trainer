@@ -72,7 +72,7 @@ def create_feature_vectors(model, dataset_path, files_path, eval_frames):
         path = os.path.join(dataset_path, file_path)
         data = create_data(path, eval_frames)
         feature_vector = model(data).detach().cpu()
-        normalized_vector = F.normalize(feature_vector, p=2, dim=1)
+        normalized_vector = F.normalize(feature_vector, p=2, dim=1).detach().cpu().numpy().squeeze()
         feats[path] = normalized_vector
 
     return feats
@@ -95,3 +95,30 @@ class PreEmphasis(torch.nn.Module):
         input = input.unsqueeze(1)
         input = F.pad(input, (1, 0), 'reflect')
         return F.conv1d(input, self.flipped_filter).squeeze(1)
+
+
+def score_normalization(ref, com, cohorts, top=-1):
+    """
+    Adaptive symmetric score normalization using cohorts from eval data
+    """
+    def ZT_norm(ref, com, top=-1):
+        """
+        Perform Z-norm or T-norm depending on input order
+        """
+        S = np.mean(np.inner(cohorts, ref), axis=1)
+        S = np.sort(S, axis=0)[::-1][:top]
+        mean_S = np.mean(S)
+        std_S = np.std(S)
+        score = np.inner(ref, com)
+        score = np.mean(score)
+        return (score - mean_S) / std_S
+
+    def S_norm(ref, com, top=-1):
+        """
+        Perform S-norm
+        """
+        return (ZT_norm(ref, com, top=top) + ZT_norm(com, ref, top=top)) / 2
+
+    ref = ref.cpu().numpy()
+    com = com.cpu().numpy()
+    return S_norm(ref, com, top=top)
