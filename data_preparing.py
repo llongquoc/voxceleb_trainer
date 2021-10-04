@@ -103,11 +103,9 @@ def main_worker(args):
     print('Model %s loaded from previous state!'%args.model_path);
 
     files_path = []
-    folder_list = os.listdir(dataset_path)
-    for folder in folder_list:
-        file_list = os.listdir(dataset_path + '/' + folder)
-        index = random.randint(0, len(file_list) - 1)
-        files_path.append(folder + '/' + file_list[index])
+    file_list = os.listdir(dataset_path)
+    for file in file_list:
+        files_path.append(file)
 
     files_path.sort()
 

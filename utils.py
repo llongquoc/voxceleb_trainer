@@ -21,6 +21,7 @@ from DatasetLoader import get_data_loader
 import torch.distributed as dist
 import torch.multiprocessing as mp
 import numpy as np
+from tqdm import tqdm
 
 
 def accuracy(output, target, topk=(1,)):
@@ -68,11 +69,11 @@ def loadParameters(path, model, gpu):
 def create_feature_vectors(model, dataset_path, files_path, eval_frames):
     feats = {}
     
-    for file_path in files_path:
+    for file_path in tqdm(files_path):
         path = os.path.join(dataset_path, file_path)
         data = create_data(path, eval_frames)
         feature_vector = model(data).detach().cpu()
-        normalized_vector = F.normalize(feature_vector, p=2, dim=1).detach().cpu().numpy().squeeze()
+        normalized_vector = F.normalize(feature_vector, p=2, dim=1)
         feats[path] = normalized_vector
 
     return feats
