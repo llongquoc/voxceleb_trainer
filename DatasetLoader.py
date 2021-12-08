@@ -22,7 +22,7 @@ def worker_init_fn(worker_id):
     numpy.random.seed(numpy.random.get_state()[1][0] + worker_id)
 
 
-def loadWAV(filename, max_frames, evalmode=True, num_eval=10, ps=0):
+def loadWAV(filename, max_frames, evalmode=True, num_eval=10, list_augment=[], ps=0):
 
     # Maximum audio length
     max_audio = max_frames * 160 + 240
@@ -52,9 +52,7 @@ def loadWAV(filename, max_frames, evalmode=True, num_eval=10, ps=0):
     temp_feat = numpy.stack(feats,axis=0).astype(numpy.float32)
     if ps == 1:
         semitones = random.randint(0, 7)
-        augment = Compose([
-        PitchShift(min_semitones=-semitones, max_semitones=semitones, p=0.4),
-        ])
+        augment = list_augment[semitones]
         feat = augment(samples=temp_feat, sample_rate=sample_rate)
     else:
         feat = temp_feat
@@ -151,12 +149,17 @@ class voxceleb_loader(Dataset):
 
     def __getitem__(self, indices):
 
+        list_augment = []
+        for i in range(0, 8):
+            list_augment.append(Compose([
+                PitchShift(min_semitones=-i, max_semitones=i, p=0.4),
+                ]))
         feat = []
 
         for index in indices:
             
             if self.data_list[index].split("/")[-2] == "hum":
-                audio = loadWAV(self.data_list[index], self.max_frames, evalmode=False, ps=1)
+                audio = loadWAV(self.data_list[index], self.max_frames, evalmode=False, list_augment, ps=1)
             else:
                 audio = loadWAV(self.data_list[index], self.max_frames, evalmode=False)
             
