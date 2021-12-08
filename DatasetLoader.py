@@ -159,7 +159,7 @@ class voxceleb_loader(Dataset):
         for index in indices:
             
             if self.data_list[index].split("/")[-2] == "hum":
-                audio = loadWAV(self.data_list[index], self.max_frames, evalmode=False, list_augment, ps=1)
+                audio = loadWAV(self.data_list[index], self.max_frames, evalmode=False, list_augment=list_augment, ps=1)
             else:
                 audio = loadWAV(self.data_list[index], self.max_frames, evalmode=False)
             
