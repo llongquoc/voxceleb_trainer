@@ -13,6 +13,7 @@ import glob
 from scipy import signal
 from scipy.io import wavfile
 from torch.utils.data import Dataset, DataLoader
+from audiomentations import Compose, PitchShift
 
 def round_down(num, divisor):
     return num - (num%divisor)
@@ -21,13 +22,21 @@ def worker_init_fn(worker_id):
     numpy.random.seed(numpy.random.get_state()[1][0] + worker_id)
 
 
-def loadWAV(filename, max_frames, evalmode=True, num_eval=10):
+def loadWAV(filename, max_frames, evalmode=True, num_eval=10, ps=0):
 
     # Maximum audio length
     max_audio = max_frames * 160 + 240
 
     # Read wav file and convert to torch tensor
-    sample_rate, audio  = wavfile.read(filename)
+    sample_rate, temp  = wavfile.read(filename)
+    if ps == 1:
+        semitones = random.randint(0, 7)
+        augment = Compose([
+        PitchShift(min_semitones=-semitones, max_semitones=semitones, p=0.4),
+        ])
+        audio = augment(samples=temp, sample_rate=sample_rate)
+    else:
+        audio = temp
 
     audiosize = audio.shape[0]
 
@@ -146,7 +155,10 @@ class voxceleb_loader(Dataset):
 
         for index in indices:
             
-            audio = loadWAV(self.data_list[index], self.max_frames, evalmode=False)
+            if self.data_list[index].split("/")[-2] == "hum":
+                audio = loadWAV(self.data_list[index], self.max_frames, evalmode=False, ps=1)
+            else:
+                audio = loadWAV(self.data_list[index], self.max_frames, evalmode=False)
             
             if self.augment:
                 augtype = random.randint(0,4)
