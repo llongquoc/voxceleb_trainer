@@ -57,7 +57,7 @@ parser.add_argument('--n_mels',         type=int,   default=64,     help='Number
 parser.add_argument('--log_input',      type=bool,  default=True,  help='Log input features')
 parser.add_argument('--model',          type=str,   default='ResNetSE34V2',     help='Name of model definition');
 parser.add_argument('--encoder_type',   type=str,   default='ASP',  help='Type of encoder');
-parser.add_argument('--nOut',           type=int,   default=512,    help='Embedding size in the last FC layer');
+parser.add_argument('--nOut',           type=int,   default=256,    help='Embedding size in the last FC layer');
 
 ## Data_preparing 's params
 parser.add_argument('--preprocess',           dest='preprocess', action='store_true', help='Use when preprocess data');
