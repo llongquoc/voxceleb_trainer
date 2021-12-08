@@ -28,15 +28,7 @@ def loadWAV(filename, max_frames, evalmode=True, num_eval=10, ps=0):
     max_audio = max_frames * 160 + 240
 
     # Read wav file and convert to torch tensor
-    sample_rate, temp  = wavfile.read(filename)
-    if ps == 1:
-        semitones = random.randint(0, 7)
-        augment = Compose([
-        PitchShift(min_semitones=-semitones, max_semitones=semitones, p=0.4),
-        ])
-        audio = augment(samples=temp, sample_rate=sample_rate)
-    else:
-        audio = temp
+    sample_rate, audio  = wavfile.read(filename)
 
     audiosize = audio.shape[0]
 
@@ -57,9 +49,17 @@ def loadWAV(filename, max_frames, evalmode=True, num_eval=10, ps=0):
         for asf in startframe:
             feats.append(audio[int(asf):int(asf)+max_audio])
 
-    feat = numpy.stack(feats,axis=0).astype(numpy.float)
+    temp_feat = numpy.stack(feats,axis=0).astype(numpy.float)
+    if ps == 1:
+        semitones = random.randint(0, 7)
+        augment = Compose([
+        PitchShift(min_semitones=-semitones, max_semitones=semitones, p=0.4),
+        ])
+        feat = augment(samples=temp_feat, sample_rate=sample_rate)
+    else:
+        feat = temp_feat
 
-    return feat;
+    return feat
     
 class AugmentWAV(object):
 
