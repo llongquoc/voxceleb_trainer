@@ -36,7 +36,7 @@ parser.add_argument('--max_frames',     type=int,   default=200,    help='Input 
 parser.add_argument('--eval_frames',    type=int,   default=400,    help='Input length to the network for testing; 0 uses the whole files');
 
 ## Training details
-parser.add_argument('--trainfunc',      type=str,   default='softmaxproto',     help='Loss function');
+parser.add_argument('--trainfunc',      type=str,   default='angleproto',     help='Loss function');
 
 ## Optimizer
 parser.add_argument('--optimizer',      type=str,   default='adam', help='sgd or adam');
