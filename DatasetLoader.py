@@ -49,7 +49,7 @@ def loadWAV(filename, max_frames, evalmode=True, num_eval=10, ps=0):
         for asf in startframe:
             feats.append(audio[int(asf):int(asf)+max_audio])
 
-    temp_feat = numpy.stack(feats,axis=0).astype(numpy.float)
+    temp_feat = numpy.stack(feats,axis=0).astype(numpy.float32)
     if ps == 1:
         semitones = random.randint(0, 7)
         augment = Compose([
