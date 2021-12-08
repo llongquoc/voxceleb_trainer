@@ -55,7 +55,7 @@ parser.add_argument('--model_path',      type=str,   default='model000000500.mod
 ## Model definition
 parser.add_argument('--n_mels',         type=int,   default=64,     help='Number of mel filterbanks');
 parser.add_argument('--log_input',      type=bool,  default=True,  help='Log input features')
-parser.add_argument('--model',          type=str,   default='ResNetSE34V2',     help='Name of model definition');
+parser.add_argument('--model',          type=str,   default='ResNetSE34L',     help='Name of model definition');
 parser.add_argument('--encoder_type',   type=str,   default='ASP',  help='Type of encoder');
 parser.add_argument('--nOut',           type=int,   default=256,    help='Embedding size in the last FC layer');
 
