@@ -74,7 +74,7 @@ def create_feature_vectors(model, dataset_path, files_path, eval_frames):
         data = create_data(path, eval_frames)
         feature_vector = model(data).detach().cpu()
         normalized_vector = F.normalize(feature_vector, p=2, dim=1)
-        feats[path] = normalized_vector
+        feats[file_path] = normalized_vector
 
     return feats
 
