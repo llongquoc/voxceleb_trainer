@@ -14,6 +14,7 @@ from scipy import signal
 from scipy.io import wavfile
 from torch.utils.data import Dataset, DataLoader
 from audiomentations import Compose, PitchShift
+import soundfile
 
 def round_down(num, divisor):
     return num - (num%divisor)
@@ -27,7 +28,7 @@ def loadWAV_test(filename, max_frames, evalmode=True, num_eval=10):
     max_audio = max_frames * 160 + 240
 
     # Read wav file and convert to torch tensor
-    audio, sample_rate = wavfile.read(filename)
+    audio, sample_rate = soundfile.read(filename)
 
     audiosize = audio.shape[0]
 
