@@ -16,7 +16,7 @@ import os
 import random
 from tuneThreshold import *
 from SpeakerNet import *
-from DatasetLoader import loadWAV
+from DatasetLoader import loadWAV, loadWAV_test
 from DatasetLoader import get_data_loader
 import torch.distributed as dist
 import torch.multiprocessing as mp
@@ -71,7 +71,7 @@ def create_feature_vectors(model, dataset_path, files_path, eval_frames):
     
     for file_path in tqdm(files_path):
         path = os.path.join(dataset_path, file_path)
-        data = create_data(path, eval_frames)
+        data = loadWAV_test(path, eval_frames, evalmode=True)
         feature_vector = model(data).detach().cpu()
         normalized_vector = F.normalize(feature_vector, p=2, dim=1)
         feats[file_path] = normalized_vector
