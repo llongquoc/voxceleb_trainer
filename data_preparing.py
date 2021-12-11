@@ -34,6 +34,7 @@ parser = argparse.ArgumentParser(description = 'Prepare Data');
 ## Data loader
 parser.add_argument('--max_frames',     type=int,   default=200,    help='Input length to the network for training');
 parser.add_argument('--eval_frames',    type=int,   default=400,    help='Input length to the network for testing; 0 uses the whole files');
+parser.add_argument('--num_eval',    type=int,   default=10,    help='Num eval');
 
 ## Training details
 parser.add_argument('--trainfunc',      type=str,   default='angleproto',     help='Loss function');
@@ -109,7 +110,7 @@ def main_worker(args):
 
     files_path.sort()
 
-    feats = create_feature_vectors(s, dataset_path, files_path, args.eval_frames)
+    feats = create_feature_vectors(s, dataset_path, files_path, args.eval_frames, args.num_eval)
     
     if args.append == True:
         temp = np.load(args.feats_path, allow_pickle=True)[()]

@@ -66,12 +66,12 @@ def loadParameters(path, model, gpu):
             self_state[name].copy_(param);
 
 
-def create_feature_vectors(model, dataset_path, files_path, eval_frames):
+def create_feature_vectors(model, dataset_path, files_path, eval_frames, num_eval):
     feats = {}
     
     for file_path in tqdm(files_path):
         path = os.path.join(dataset_path, file_path)
-        data = torch.FloatTensor(loadWAV_test(path, eval_frames, evalmode=True))
+        data = torch.FloatTensor(loadWAV_test(path, eval_frames, evalmode=True, num_eval=num_eval))
         feature_vector = model(data).detach().cpu()
         normalized_vector = F.normalize(feature_vector, p=2, dim=1)
         feats[file_path] = normalized_vector
