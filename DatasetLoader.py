@@ -59,7 +59,7 @@ def loadWAV(filename, max_frames, evalmode=True, num_eval=10, list_augment=[], p
     max_audio = max_frames * 160 + 240
 
     # Read wav file and convert to torch tensor
-    audio, sample_rate = soundfile.read(filename)
+    sample_rate, audio  = wavfile.read(filename)
 
     audiosize = audio.shape[0]
 
